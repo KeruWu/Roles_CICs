@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from PIL import Image
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, ConcatDataset
 from torchvision import transforms
 
 DOMAINS = ['clipart', 'infograph', 'painting', 'quickdraw', 'real', 'sketch']
@@ -116,20 +116,21 @@ class DomainNet_Dataset(Dataset):
         if self.divs:
             return {key: i for i, key in enumerate(self.divs)}.get(self.labels[idx], -1)
         return MAPPING.get(self.labels[idx], -1)
-    
-def domainNet_loaders(directory = '/home/ubuntu/DA_CIC/data/domainNet', divs=None, batch_size=128):
+
+def domainNet_loaders(directory='/home/ubuntu/DA_CIC/data/domainNet', divs=None, batch_size=128):
     transform = transforms.Compose([
         transforms.Resize((224, 224)), 
         transforms.ToTensor(), 
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]), # values from ImageNet dataset
     ])    
 
-    train_loaders, test_loaders = [], []
+    dataloaders = []
     for d in DOMAINS:
         train_dataset = DomainNet_Dataset(directory, d, divs=divs, datatype='train', transform=transform)
         test_dataset = DomainNet_Dataset(directory, d, divs=divs, datatype='test', transform=transform)
         
-        train_loaders.append(DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0))
-        test_loaders.append(DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=0))
+        combined_dataset = ConcatDataset([train_dataset, test_dataset])
+        combined_loader = DataLoader(combined_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
+        dataloaders.append(combined_loader)
 
-    return train_loaders, test_loaders
+    return dataloaders
