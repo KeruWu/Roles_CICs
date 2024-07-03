@@ -185,7 +185,7 @@ if __name__ == "__main__":
             model = mmodel.CNN_CelebA(nb_classes = 2).to(device)
             
         elif myargs.exp == 'DomainNet':
-            dataloaders, _ = mdata.domainnet.domainNet_loaders(
+            dataloaders = mdata.domainnet.domainNet_loaders(
                 directory=data_root + '/domainNet',
                 divs=['Furniture', 'Mammal'],
                 batch_size=16
